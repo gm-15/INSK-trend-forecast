@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.claude/
+
+# Data — 큰 파일은 LFS 또는 Google Drive
+data/*.parquet
+data/*.csv
+data/*.tsv
+data/raw/
+data/cache/
+
+# Models
+models/*.pt
+models/*.bin
+models/*.safetensors
+models/checkpoints/
+
+# Notebooks output
+notebooks/*.html
+notebooks/output/
+
+# Streamlit cache
+.streamlit/secrets.toml
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local

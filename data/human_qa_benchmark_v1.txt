@@ -1,0 +1,207 @@
+==============================================================
+INSK Human-curated QA Benchmark v1 (27 questions)
+Created: 2026-05-23 by 박건우 (test01@gmail.com)
+Corpus snapshot: 약 290건 (5/23 18:00 기준, 본인 시야)
+==============================================================
+
+[적용한 수정 사항]
+- L3: gold [427, 345, 351] → [427, 345] (351은 partial — notes로)
+- I2: type "Partial" → "Negative" (corpus 부재 인정. weak gold 444는 notes로)
+- T3: type "Partial" → "Negative" (corpus 부재 인정. weak gold 490은 notes로)
+- T5: type "Partial" → "Trend" (gold 2개로 추세 답변 가능)
+
+[최종 분포]
+- Strict: 7개 (L1, L3, I1, B1, B2, B5, T1)
+- Trend:  14개 (L2, L4, L5, L6, I3, I6, B3, B4, B6, B7, B8, B9, T5, T6)
+- Negative: 6개 (I2, I4, I5, T2, T3, T4)
+
+==============================================================
+CATEGORY A. LLM (6 questions)
+==============================================================
+
+[L1] OpenAI가 최근 발표한 신모델·기능은?
+  Type:   Strict
+  Gold:   [519, 317]
+  Truth:  "SBS와 OpenAI 협업 사례가 등장했고, ChatGPT 기반 선거 분석·정보 제공 기능 활용이 확대되고 있다."
+  Notes:  corpus 한계로 모델 스펙 대신 활용 사례 중심. 445/523은 partial relevance.
+  Eval:   519 Strong / 317 Strong / 445 Partial / 523 Partial
+
+[L2] AI 에이전트 시장 최근 동향은?
+  Type:   Trend
+  Gold:   [469, 529, 500]
+  Truth:  "AI 에이전트 시장은 Claude Skills 기반 설계, 자율 실행형 Gemini Spark, 경량 에이전트 모델 등장으로 발전 중이다."
+  Notes:  시장 흐름 질문, 단일 정답 부재. 466/467 partial.
+  Eval:   469 Strong / 529 Strong / 500 Strong / 466/467 Partial
+
+[L3] Anthropic 매출·사업 동향은?
+  Type:   Strict
+  Gold:   [427, 345]
+  Truth:  "앤트로픽은 2분기 16조 매출과 첫 흑자 가능성이 언급되며 AI 업계 수익화 선두 사례로 평가받고 있다."
+  Notes:  351 partial (gold에서 제외, Strict 정의 유지). 349 weak.
+  Eval:   427 Strong / 345 Strong / 351 Partial / 349 Weak
+
+[L4] Gemini·구글의 AI 전략은?
+  Type:   Trend
+  Gold:   [529, 372, 390, 339]
+  Truth:  "구글은 Gemini 기반 자율형 AI, 에이전트화된 검색·개발도구, AI 중심 플랫폼 재편 전략을 강화하고 있다."
+  Notes:  339/353 partial.
+  Eval:   529 Strong / 372 Strong / 390 Strong / 339 Partial / 353 Partial
+
+[L5] 멀티모달 AI 주요 사례는?
+  Type:   Trend
+  Gold:   [489, 388, 372]
+  Truth:  "멀티모달 AI는 영상 생성·편집, 음성·이미지 통합 처리, AI 비서 기능 중심으로 확장되고 있다."
+  Eval:   489 Strong / 388 Strong / 372 Partial
+
+[L6] 오픈소스 LLM 동향은?
+  Type:   Trend
+  Gold:   [261, 285, 500]
+  Truth:  "기업들은 오픈소스 기반 LLM 플랫폼과 에이전트 모델 공개를 통해 생태계 확장 전략을 강화하고 있다."
+  Notes:  Llama 직접 언급 거의 없음 — corpus 약함.
+  Eval:   261 Strong / 285 Strong / 500 Partial
+
+==============================================================
+CATEGORY B. INFRA (6 questions)
+==============================================================
+
+[I1] 삼성전자 AI 반도체 전략은?
+  Type:   Strict
+  Gold:   [491, 288]
+  Truth:  "삼성전자는 AI 반도체와 온디바이스 AI 확대를 기반으로 차세대 성장 전략을 추진 중이다."
+  Notes:  444는 시장 추천주 기사라 partial.
+
+[I2] SK하이닉스·HBM 시장 동향은?
+  Type:   Negative (수정: 기존 Partial → Negative)
+  Gold:   []
+  Truth:  "No specific relevant article in current corpus."
+  Notes:  weak gold 444 partial relevance available. HBM 직접 기사 부족 — W4 corpus 확장 후 재검토.
+
+[I3] NVIDIA AI 칩 동향은?
+  Type:   Trend
+  Gold:   [500, 428, 375]
+  Truth:  "NVIDIA 중심 GPU 시장에서 추론·경량화·대체 칩 경쟁이 동시에 확대되고 있다."
+
+[I4] 국내 AI 반도체 스타트업 동향은?
+  Type:   Negative
+  Gold:   []
+  Truth:  "No relevant information in corpus."
+  Notes:  corpus 부재. 학기 후반 삭제 검토.
+
+[I5] AI 반도체 미·중 경쟁은?
+  Type:   Negative
+  Gold:   []
+  Truth:  "No relevant information in corpus."
+
+[I6] on-device·Edge AI 칩 동향은?
+  Type:   Trend
+  Gold:   [371, 457, 288]
+  Truth:  "온디바이스·Edge AI는 로보틱스·저전력 추론·현장 AI 처리 중심으로 발전 중이다."
+
+==============================================================
+CATEGORY C. AI BUSINESS (9 questions)
+==============================================================
+
+[B1] OpenAI IPO·매출 동향은?
+  Type:   Strict
+  Gold:   [315, 319]
+  Truth:  "OpenAI는 IPO 가능성과 함께 AI 시장 경쟁 심화 속 기업가치 확대가 주목받고 있다."
+  Notes:  348 partial (비교 기사).
+
+[B2] 최근 AI M&A 사례는?
+  Type:   Strict
+  Gold:   [405, 407, 408]
+  Truth:  "ADI의 엠파워 세미컨덕터 인수 사례처럼 AI 반도체 전력 병목 해결을 위한 M&A가 증가하고 있다."
+  Notes:  3개가 사실상 같은 사건 — retrieval consistency 검증용. diversity 평가에 좋음.
+
+[B3] AI 스타트업 투자 동향은?
+  Type:   Trend
+  Gold:   [508, 524, 545]
+  Truth:  "AI 시장에서는 빅테크·정부·스타트업 중심의 투자 확대가 지속되고 있다."
+
+[B4] 글로벌 AI 정책·규제 동향은?
+  Type:   Trend
+  Gold:   [525, 302, 520]
+  Truth:  "글로벌 AI 규제는 안전성·워터마크·위험 통제를 중심으로 강화되고 있다."
+
+[B5] 한국 정부 AI 정책·투자는?
+  Type:   Strict
+  Gold:   [431]
+  Truth:  "정부는 글로벌 AI 허브 구축과 AI 기반 문제 해결 전략을 추진 중이다."
+  Notes:  gold 단일 — corpus 한계.
+
+[B6] 생성형 AI 시장 동향은?
+  Type:   Trend
+  Gold:   [529, 450, 522]
+  Truth:  "생성형 AI 시장은 기업 도입, 거버넌스, 자율형 AI 확산 중심으로 성장 중이다."
+
+[B7] 글로벌 AI 허브 경쟁은?
+  Type:   Trend
+  Gold:   [431, 499, 418]
+  Truth:  "국가·기업들은 AI 데이터센터와 글로벌 AI 허브 구축 경쟁을 강화하고 있다."
+
+[B8] 빅테크 AI 투자 규모는?
+  Type:   Trend
+  Gold:   [499, 527, 529]
+  Truth:  "구글·MS·메타 등 빅테크는 AI 인프라·칩·자율형 AI 중심 투자 규모를 확대하고 있다."
+
+[B9] AI 일자리·고용 영향은?
+  Type:   Trend
+  Gold:   [329, 278, 290]
+  Truth:  "AI 활용 능력이 채용 경쟁력으로 연결되며 AI 관련 직무 수요가 증가하고 있다."
+
+==============================================================
+CATEGORY D. TELCO (6 questions)
+==============================================================
+
+[T1] SKT AI 서비스·전략은?
+  Type:   Strict
+  Gold:   [281, 482, 487]
+  Truth:  "SKT는 텔코 LLM과 사내 AI 에이전트 확산 전략을 추진하고 있다."
+  Notes:  gold 3개 — Strict-multi. retrieval consistency 검증에 좋음.
+
+[T2] KT AI 사업 동향은?
+  Type:   Negative
+  Gold:   []
+  Truth:  "No relevant information in corpus."
+
+[T3] LG U+ AI 서비스는?
+  Type:   Negative (수정: 기존 Partial → Negative)
+  Gold:   []
+  Truth:  "No specific relevant article in current corpus."
+  Notes:  weak gold 490 partial — LG U+ specific 정보 부족.
+
+[T4] 5G·6G와 AI 결합은?
+  Type:   Negative
+  Gold:   []
+  Truth:  "No relevant information in corpus."
+  Notes:  학기 후반 삭제 검토.
+
+[T5] 통신사 데이터센터 사업은?
+  Type:   Trend (수정: 기존 Partial → Trend)
+  Gold:   [531, 418]
+  Truth:  "AI 데이터센터와 인프라 구축 수요가 통신사 사업 영역으로 확대되고 있다."
+  Notes:  통신사 specificity 부족, AI 데이터센터 일반 흐름으로 답변.
+
+[T6] 통신사 AI 에이전트 서비스는?
+  Type:   Trend
+  Gold:   [298, 387, 490]
+  Truth:  "통신사들은 음성 AI와 에이전트 기반 서비스 경쟁을 강화하고 있다."
+
+==============================================================
+SUMMARY
+==============================================================
+Total:         27 questions
+Strict:        7  (precision·reranker 평가에 핵심)
+Trend:        14  (synthesis·종합 추론 평가)
+Negative:      6  (hallucination·abstention 검증 — 학생팀 대부분 안 함)
+
+Mapped articles:  61개 (gold) + partial 다수
+Unmapped (Neg.):  6 questions (corpus 부재 인정)
+
+평가 가능 지표:
+  - Recall@k (Strict)
+  - MRR / nDCG (Strict + Trend)
+  - Faithfulness / Answer Relevance (Strict + Trend ground_truth 기반)
+  - Hallucination rate (Negative)
+  - Abstention precision (Negative)
+==============================================================

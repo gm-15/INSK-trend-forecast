@@ -1,0 +1,27 @@
+{"id":"L1","question":"OpenAI가 최근 발표한 신모델·기능은?","category":"LLM","type":"Strict","gold_articles":[519,317],"ground_truth":"SBS와 OpenAI 협업 사례가 등장했고, ChatGPT 기반 선거 분석·정보 제공 기능 활용이 확대되고 있다.","notes":"corpus 한계로 모델 스펙 대신 활용 사례 중심. 445/523 partial."}
+{"id":"L2","question":"AI 에이전트 시장 최근 동향은?","category":"LLM","type":"Trend","gold_articles":[469,529,500],"ground_truth":"AI 에이전트 시장은 Claude Skills 기반 설계, 자율 실행형 Gemini Spark, 경량 에이전트 모델 등장으로 발전 중이다.","notes":"시장 흐름 질문 — single ground truth 부재."}
+{"id":"L3","question":"Anthropic 매출·사업 동향은?","category":"LLM","type":"Strict","gold_articles":[427,345],"ground_truth":"앤트로픽은 2분기 16조 매출과 첫 흑자 가능성이 언급되며 AI 업계 수익화 선두 사례로 평가받고 있다.","notes":"351 partial (gold 제외, Strict 정의 유지). 349 weak."}
+{"id":"L4","question":"Gemini·구글의 AI 전략은?","category":"LLM","type":"Trend","gold_articles":[529,372,390,339],"ground_truth":"구글은 Gemini 기반 자율형 AI, 에이전트화된 검색·개발도구, AI 중심 플랫폼 재편 전략을 강화하고 있다.","notes":""}
+{"id":"L5","question":"멀티모달 AI 주요 사례는?","category":"LLM","type":"Trend","gold_articles":[489,388,372],"ground_truth":"멀티모달 AI는 영상 생성·편집, 음성·이미지 통합 처리, AI 비서 기능 중심으로 확장되고 있다.","notes":""}
+{"id":"L6","question":"오픈소스 LLM 동향은?","category":"LLM","type":"Trend","gold_articles":[261,285,500],"ground_truth":"기업들은 오픈소스 기반 LLM 플랫폼과 에이전트 모델 공개를 통해 생태계 확장 전략을 강화하고 있다.","notes":"Llama 직접 언급 거의 없음 — corpus 약함."}
+{"id":"I1","question":"삼성전자 AI 반도체 전략은?","category":"INFRA","type":"Strict","gold_articles":[491,288],"ground_truth":"삼성전자는 AI 반도체와 온디바이스 AI 확대를 기반으로 차세대 성장 전략을 추진 중이다.","notes":"444 partial (시장 추천주 기사)."}
+{"id":"I2","question":"SK하이닉스·HBM 시장 동향은?","category":"INFRA","type":"Negative","gold_articles":[],"ground_truth":"No specific relevant article in current corpus.","notes":"weak gold 444 partial relevance available. HBM 직접 기사 부족 — W4 corpus 확장 후 재검토."}
+{"id":"I3","question":"NVIDIA AI 칩 동향은?","category":"INFRA","type":"Trend","gold_articles":[500,428,375],"ground_truth":"NVIDIA 중심 GPU 시장에서 추론·경량화·대체 칩 경쟁이 동시에 확대되고 있다.","notes":""}
+{"id":"I4","question":"국내 AI 반도체 스타트업 동향은?","category":"INFRA","type":"Negative","gold_articles":[],"ground_truth":"No relevant information in corpus.","notes":"학기 후반 삭제 검토."}
+{"id":"I5","question":"AI 반도체 미·중 경쟁은?","category":"INFRA","type":"Negative","gold_articles":[],"ground_truth":"No relevant information in corpus.","notes":""}
+{"id":"I6","question":"on-device·Edge AI 칩 동향은?","category":"INFRA","type":"Trend","gold_articles":[371,457,288],"ground_truth":"온디바이스·Edge AI는 로보틱스·저전력 추론·현장 AI 처리 중심으로 발전 중이다.","notes":""}
+{"id":"B1","question":"OpenAI IPO·매출 동향은?","category":"AI Business","type":"Strict","gold_articles":[315,319],"ground_truth":"OpenAI는 IPO 가능성과 함께 AI 시장 경쟁 심화 속 기업가치 확대가 주목받고 있다.","notes":"348 partial (비교 기사)."}
+{"id":"B2","question":"최근 AI M&A 사례는?","category":"AI Business","type":"Strict","gold_articles":[405,407,408],"ground_truth":"ADI의 엠파워 세미컨덕터 인수 사례처럼 AI 반도체 전력 병목 해결을 위한 M&A가 증가하고 있다.","notes":"3개가 사실상 같은 사건 — retrieval consistency 검증용."}
+{"id":"B3","question":"AI 스타트업 투자 동향은?","category":"AI Business","type":"Trend","gold_articles":[508,524,545],"ground_truth":"AI 시장에서는 빅테크·정부·스타트업 중심의 투자 확대가 지속되고 있다.","notes":""}
+{"id":"B4","question":"글로벌 AI 정책·규제 동향은?","category":"AI Business","type":"Trend","gold_articles":[525,302,520],"ground_truth":"글로벌 AI 규제는 안전성·워터마크·위험 통제를 중심으로 강화되고 있다.","notes":""}
+{"id":"B5","question":"한국 정부 AI 정책·투자는?","category":"AI Business","type":"Strict","gold_articles":[431],"ground_truth":"정부는 글로벌 AI 허브 구축과 AI 기반 문제 해결 전략을 추진 중이다.","notes":"gold 단일 — corpus 한계."}
+{"id":"B6","question":"생성형 AI 시장 동향은?","category":"AI Business","type":"Trend","gold_articles":[529,450,522],"ground_truth":"생성형 AI 시장은 기업 도입, 거버넌스, 자율형 AI 확산 중심으로 성장 중이다.","notes":""}
+{"id":"B7","question":"글로벌 AI 허브 경쟁은?","category":"AI Business","type":"Trend","gold_articles":[431,499,418],"ground_truth":"국가·기업들은 AI 데이터센터와 글로벌 AI 허브 구축 경쟁을 강화하고 있다.","notes":""}
+{"id":"B8","question":"빅테크 AI 투자 규모는?","category":"AI Business","type":"Trend","gold_articles":[499,527,529],"ground_truth":"구글·MS·메타 등 빅테크는 AI 인프라·칩·자율형 AI 중심 투자 규모를 확대하고 있다.","notes":""}
+{"id":"B9","question":"AI 일자리·고용 영향은?","category":"AI Business","type":"Trend","gold_articles":[329,278,290],"ground_truth":"AI 활용 능력이 채용 경쟁력으로 연결되며 AI 관련 직무 수요가 증가하고 있다.","notes":""}
+{"id":"T1","question":"SKT AI 서비스·전략은?","category":"Telco","type":"Strict","gold_articles":[281,482,487],"ground_truth":"SKT는 텔코 LLM과 사내 AI 에이전트 확산 전략을 추진하고 있다.","notes":"gold 3개 — Strict-multi. retrieval consistency 검증에 좋음."}
+{"id":"T2","question":"KT AI 사업 동향은?","category":"Telco","type":"Negative","gold_articles":[],"ground_truth":"No relevant information in corpus.","notes":""}
+{"id":"T3","question":"LG U+ AI 서비스는?","category":"Telco","type":"Negative","gold_articles":[],"ground_truth":"No specific relevant article in current corpus.","notes":"weak gold 490 partial — LG U+ specific 정보 부족."}
+{"id":"T4","question":"5G·6G와 AI 결합은?","category":"Telco","type":"Negative","gold_articles":[],"ground_truth":"No relevant information in corpus.","notes":"학기 후반 삭제 검토."}
+{"id":"T5","question":"통신사 데이터센터 사업은?","category":"Telco","type":"Trend","gold_articles":[531,418],"ground_truth":"AI 데이터센터와 인프라 구축 수요가 통신사 사업 영역으로 확대되고 있다.","notes":"통신사 specificity 부족, AI 데이터센터 일반 흐름으로 답변."}
+{"id":"T6","question":"통신사 AI 에이전트 서비스는?","category":"Telco","type":"Trend","gold_articles":[298,387,490],"ground_truth":"통신사들은 음성 AI와 에이전트 기반 서비스 경쟁을 강화하고 있다.","notes":""}
