@@ -19,8 +19,8 @@ env/
 *.swp
 .claude/
 
-# Data — 큰 파일은 LFS 또는 Google Drive
-data/*.parquet
+# Data
+# parquet은 git 직접 commit (2026-05-27 결정, 학교 프로젝트 기간 동안 약 25MB 예상)
 data/*.csv
 data/*.tsv
 data/raw/

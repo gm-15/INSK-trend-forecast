@@ -6,33 +6,35 @@ INSK 시스템에서 export한 한국어 AI 산업 뉴스 코퍼스의 스키마
 
 ## 1. 파일 목록
 
-| 파일 | 설명 | 상태 |
+| 파일 | 설명 | 상태 (2026-05-27) |
 |---|---|:---:|
-| `data/human_qa_benchmark_v1.jsonl` | QA 평가셋 27개 (Strict/Trend/Negative) | ✅ 사용 가능 |
+| `data/human_qa_benchmark_v1.jsonl` | QA 평가셋 27개 (Strict/Trend/Negative) | ✅ |
 | `data/human_qa_benchmark_v1.txt` | 사람 가독성 양식 | ✅ |
-| `data/insk_corpus.parquet` | articles 테이블 | ⏳ 5/24 export 예정 |
-| `data/article_analyses.parquet` | LLM 분석 결과 | ⏳ 5/24 |
-| `data/article_embeddings.parquet` | OpenAI 1536d 임베딩 | ⏳ 5/24 |
-| `data/article_feedbacks.parquet` | 좋아요·싫어요 (현재 거의 비어있음) | ⏳ (선택) |
-| `data/keywords.parquet` | 검색 키워드 23개 | ⏳ |
+| `data/insk_corpus.parquet` | articles 테이블 (406건) | ✅ 5/27 export |
+| `data/article_analyses.parquet` | LLM 분석 결과 (406건) | ✅ 5/27 |
+| `data/article_embeddings.parquet` | OpenAI 1536d 임베딩 (406건, 약 5MB) | ✅ 5/27 |
+| `data/keywords.parquet` | 검색 키워드 37건 | ✅ 5/27 |
+
+> 6/4 최종 갱신 예정 (예상 1,500~2,000건)
 
 ---
 
 ## 2. 스키마
 
-### `articles.parquet`
+### `insk_corpus.parquet` (articles)
 
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
 | article_id | BIGINT (PK) | 고유 ID |
-| title | VARCHAR(500) | 한국어 95%+ (영문 모델·회사명 일부 혼합) |
-| body | TEXT | 본문 (6000자에서 truncate됨, §4.3 참조) |
+| title | VARCHAR(255) | 한국어 95%+ (영문 모델·회사명 일부 혼합) |
 | original_url | TEXT | 원본 기사 URL |
+| published_at | DATETIME | 매체 발행 시각 (§4.6 참조: AITimes/TheGuru 60+60건은 부정확) |
+| created_at | DATETIME | INSK 수집 시각 |
 | source | VARCHAR(100) | "Naver" / "AITimes" / "TheGuru" |
-| published_at | DATETIME | 매체 발행 시각 |
-| created_at | TIMESTAMP | INSK 수집 시각 |
-| country | VARCHAR(50) | 거의 "KR" |
-| language | VARCHAR(50) | 거의 "ko" |
+| country | VARCHAR(10) | 거의 "KR" |
+| language | VARCHAR(10) | 거의 "ko" |
+
+> ⚠️ **body 컬럼 없음**: INSK는 본문을 OpenAI 분석에 사용 후 저장하지 않음. retrieval에 사용 가능한 텍스트는 `title` + `article_analyses.summary` (5줄) + `article_analyses.insight` (1줄) + `article_analyses.tags`. 벡터 검색은 `article_embeddings`(본문 기반으로 사전 계산됨)로 가능 → §4.7 참조.
 
 ### `article_analyses.parquet`
 
@@ -53,9 +55,9 @@ INSK 시스템에서 export한 한국어 AI 산업 뉴스 코퍼스의 스키마
 
 | 컬럼 | 설명 |
 |---|---|
-| embedding_id (PK) | |
+| embedding_id (PK) | DB에서는 `id` 컬럼, parquet에서는 `embedding_id`로 rename |
 | article_id (FK) | |
-| embedding_json | **1536차원 float**, JSON 문자열 직렬화 |
+| embedding_json | **1536차원 float**, JSON 문자열 직렬화. 본문 6000자 truncate 후 OpenAI 호출 결과 |
 
 **로드 예시**:
 ```python
@@ -67,7 +69,7 @@ df["embedding"] = df["embedding_json"].apply(lambda s: np.array(json.loads(s)))
 # df["embedding"].iloc[0].shape → (1536,)
 ```
 
-### `keywords.parquet` (검색 키워드 23개)
+### `keywords.parquet` (검색 키워드 37개, 2026-05-27 기준)
 
 | 카테고리 (의도) | 키워드 |
 |---|---|
@@ -98,15 +100,22 @@ T_CLOUD / T_NETWORK_INFRA / T_HR / T_AI_SERVICE / T_MARKETING / T_STRATEGY / T_E
 
 ## 4. ⚠️ 알려진 한계 — 실험 영향
 
-### 4.1 분류 편향 (mitigated, 일부 남음)
+### 4.1 분류 편향 (mitigated, 일부 후퇴)
 
-**현황**: v4 taxonomy 재설계로 일부 완화됨.
-- 2026-05-22 마이그레이션 후 LLM 카테고리 4% → 20% 증가
-- 그러나 신규 trigger에서 AI Business 비율 여전히 57-71%
+**현황 (2026-05-27 실측, 누적 406건)**:
+| 카테고리 | 5/22 마이그레이션 직후 | 5/27 현재 | 변화 |
+|---|:---:|:---:|---|
+| AI Business | 55% | **55.7%** | 유지 |
+| LLM | **20%** | **14.8%** | ⚠️ 5.2%p 후퇴 |
+| INFRA | - | 15.8% | |
+| Telco | - | 13.8% | |
+
+→ 신규 trigger에서 LLM 비율이 다시 떨어짐. 신규 86건만 별도 분석 + SYSTEM_PROMPT 추가 보강 검토 중 (W3 박건우 작업).
 
 **영향**:
-- ❌ retrieval 실험 (BM25 / Embedding / Reranker)은 본문 기반 → 영향 없음
-- ✅ category 컬럼 필터링은 LLM 부족할 수 있음 → 본문·키워드 매칭으로 우회 권장
+- ❌ retrieval 실험 (Embedding / Reranker)은 임베딩 기반 → 영향 없음
+- ⚠️ BM25는 본문이 없어서 title+summary 기반으로 해야 함 (§4.7 참조)
+- ✅ category 컬럼 필터링은 LLM 부족할 수 있음 → tags·summary 매칭으로 우회 권장
 
 ### 4.2 시계열 lumpy
 
@@ -124,21 +133,47 @@ OpenAI 임베딩 호출 시 본문 6000자 이상은 잘림. 임베딩은 정상
 - `articles.body`도 잘려 있을 가능성
 - long-form 분석에는 부적합
 
-### 4.4 매체 편향
+### 4.4 매체 편향 (5/27 실측, 심화 추세)
 
-| 매체 | 비율 | 비고 |
-|---|:---:|---|
-| Naver | 60% | search API 풍부 |
-| AITimes | 18% | RSS 매일 1-2건 갱신 |
-| TheGuru | 18% | 동일 |
+| 매체 | 5/22 | 5/27 | 비고 |
+|---|:---:|:---:|---|
+| Naver | 60% | **70.4%** (286건) | search API 풍부, 누적할수록 비율 상승 |
+| AITimes | 18% | 14.8% (60건) | RSS 매일 1-2건 갱신 천장 |
+| TheGuru | 18% | 14.8% (60건) | 동일 |
 
-→ retrieval 실험 시 매체별 균형 맞춤 평가 권장.
+→ retrieval 실험 시 매체별 균형 sampling 평가 권장. 6/4 시점에는 Naver 75-80% 예상.
 
 ### 4.5 외부 매체 검색 한계
 
 - Naver `display=10` + `sort=sim` + `start` 없음 → 키워드당 최대 10건 풀
 - AITimes/TheGuru RSS는 매체 최신 발행분만
 - **과거 데이터 백필 불가능** → 시계열 길이는 INSK 가동 시작 시점부터
+
+### 4.6 ⚠️ AITimes / TheGuru published_at 부정확 (2026-05-27 발견)
+
+- 기존 AITimes 60건 + TheGuru 60건의 `published_at`은 INSK 수집 시각(`created_at`)과 동일
+- 코드 버그: `processAITimes` / `processTheGuru`에서 RSS pubDate 파싱 안 하고 `LocalDateTime.now()` 사용
+- 2026-05-27 INSK commit `0033b84`로 코드 수정 완료, **신규 trigger 분부터 정확한 매체 발행 시각**
+- 기존 120건은 RSS lookback 불가라 backfill 못 함
+- **영향**: temporal weighting 실험 시 AITimes/TheGuru 120건은 published_at 대신 source filter로 제외하거나 별도 처리 권장
+
+### 4.7 🚨 articles.body 없음 (가장 중요)
+
+INSK는 본문을 OpenAI 분석 입력으로 한 번 쓴 뒤 저장하지 않음. retrieval 실험에서 사용 가능한 텍스트:
+
+| 텍스트 | 출처 | 평균 길이 |
+|---|---|---|
+| title | `insk_corpus.title` | 30~80자 |
+| summary | `article_analyses.summary` | 5줄 (약 250자) |
+| insight | `article_analyses.insight` | 1줄 (약 80자) |
+| tags | `article_analyses.tags` | 3 keywords |
+| **embedding** | `article_embeddings.embedding_json` | **본문 6000자 truncate 기반 1536d 벡터** |
+
+**팀원별 영향**:
+- 팀원 A (BM25): title + summary + insight + tags concat 해서 인덱스 만들기
+- 팀원 A (Embedding 검색): `article_embeddings` 그대로 사용 가능 ✅
+- 팀원 B (Reranker): 쿼리·문서 쌍 학습 시 문서 = title + summary 형태
+- 팀원 C (RAG 답변): LLM에 넣을 context는 title + summary + insight
 
 ---
 
