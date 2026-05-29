@@ -47,6 +47,10 @@ logs/
 .DS_Store
 Thumbs.db
 
-# Env
+# Env — API 키 절대 git 포함 금지
 .env
 .env.local
+
+# 임시 캐시 (API 키 관련 데이터 포함 가능)
+data/.cache.pkl
+data/*.cache
