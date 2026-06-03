@@ -26,11 +26,12 @@ data/*.tsv
 data/raw/
 data/cache/
 
-# Models
+# Models (대용량 가중치는 git 제외, Google Drive 공유)
 models/*.pt
 models/*.bin
 models/*.safetensors
 models/checkpoints/
+src/reranker/*.pt
 
 # Notebooks output
 notebooks/*.html
