@@ -1,0 +1,10 @@
+# INSK RAG 데모 (app/streamlit_demo.py) 의존성
+streamlit>=1.30
+pandas>=2.0
+numpy>=1.24
+pyarrow>=14.0
+rank-bm25>=0.2.2
+sentence-transformers>=2.5
+torch>=2.0
+transformers>=4.38
+openai>=1.10

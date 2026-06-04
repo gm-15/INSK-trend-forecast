@@ -25,6 +25,8 @@ data/*.csv
 data/*.tsv
 data/raw/
 data/cache/
+# 데모 임베딩 캐시 (앱이 자동 재생성)
+data/corpus_bge_m3.npz
 
 # Models (대용량 가중치는 git 제외, Google Drive 공유)
 models/*.pt
