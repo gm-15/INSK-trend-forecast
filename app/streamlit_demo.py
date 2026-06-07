@@ -195,16 +195,16 @@ def rerank(query, df, cand_idx, tokenizer, model, top_n=3):
     return rows.head(top_n)
 
 
-def generate_answer(query, context_rows):
+def generate_answer(query, context_rows, api_key):
     """GPT-4o-mini로 근거 인용 답변 생성. 키 없으면 None."""
-    if not os.environ.get("OPENAI_API_KEY"):
+    if not api_key:
         return None
     from openai import OpenAI
 
     ctx = "\n\n".join(
         f"[{i+1}] {row['combined_text']}" for i, (_, row) in enumerate(context_rows.iterrows())
     )
-    client = OpenAI()
+    client = OpenAI(api_key=api_key)
     resp = client.chat.completions.create(
         model=GEN_MODEL,
         temperature=0,
@@ -231,8 +231,19 @@ qa_bench = load_benchmark()
 with st.sidebar:
     st.header("⚙️ 설정")
     st.metric("검색 대상 기사 수", f"{len(df)}건")
-    has_key = bool(os.environ.get("OPENAI_API_KEY"))
-    st.write("OpenAI 키:", "✅ 감지됨" if has_key else "❌ 없음 (검색까지만)")
+
+    # OpenAI 키: 환경변수 우선, 없으면 UI 입력 (발표 시연용)
+    env_key = os.environ.get("OPENAI_API_KEY", "")
+    ui_key = st.text_input(
+        "OpenAI API Key (답변 생성용)",
+        type="password",
+        value="",
+        help="키를 넣으면 3단계 답변 생성까지 작동. 비우면 검색·리랭킹까지만.",
+    )
+    openai_key = (env_key or ui_key).strip()
+    has_key = bool(openai_key)
+    st.write("OpenAI 키:", "✅ 사용 가능" if has_key else "❌ 없음 (검색까지만)")
+
     tok, rer = load_reranker()
     st.write("Reranker:", "✅ 로드됨" if rer is not None else "⚠️ 모델 없음 (검색 순서 유지)")
 
@@ -272,7 +283,10 @@ if run and query.strip():
     answer = None
     if has_key:
         with st.spinner("3단계: GPT-4o-mini 답변 생성..."):
-            answer = generate_answer(query, reranked)
+            try:
+                answer = generate_answer(query, reranked, openai_key)
+            except Exception as e:
+                st.error(f"답변 생성 실패 (키 확인): {e}")
 
     # ---- 결과 표시 ----
     col1, col2 = st.columns([1, 1])
@@ -302,7 +316,7 @@ if run and query.strip():
     elif has_key:
         st.info("답변 생성 결과가 비었습니다.")
     else:
-        st.warning("OPENAI_API_KEY가 없어 답변 생성을 건너뜀. 검색·리랭킹까지만 시연됩니다.")
+        st.warning("왼쪽 사이드바에 OpenAI 키를 넣으면 답변까지 생성됩니다. (지금은 검색·리랭킹까지만)")
 
     # 근거 문서 펼치기
     with st.expander("📄 답변 근거로 쓰인 문서 보기"):
