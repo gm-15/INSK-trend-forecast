@@ -1,182 +1,125 @@
 # INSK Trend Forecast
 
 > **한국어 AI 뉴스 도메인 Temporal-aware Hybrid Retrieval 기반 RAG 성능 최적화 연구**
-> 부제: Embedding 모델·Cross-encoder Reranker·시간 가중치의 정량 ablation + Failure Case Analysis
+> Embedding 모델 · Cross-encoder Reranker · 시간 가중치의 정량 ablation + Failure Case Analysis
 
-상명대학교 시계열 데이터 수업 팀프로젝트 (2026 1학기).
-[INSK](https://github.com/gm-15/INSK) 시스템에서 export한 한국어 AI 산업 뉴스 코퍼스를 사용해, 한국어 도메인에 최적화된 RAG retrieval 품질을 정량·정성 양쪽으로 측정한다.
+상명대학교 시계열 데이터 수업 팀프로젝트 (2026-1학기, 1조).
+운영 중인 뉴스 분석 시스템 [INSK](https://github.com/gm-15/INSK)에서 export한 한국어 AI 산업 뉴스 코퍼스를 사용해, RAG의 검색·재정렬·생성 단계를 분리해 정량·정성으로 측정한다.
 
----
-
-## 🎯 한 줄 정의
-
-뉴스 RAG에서 흔히 발생하는 3가지 실패(semantic ambiguity / stale retrieval / keyword mismatch)를 **Hybrid Retrieval + Cross-encoder Reranker + Temporal Weighting** 조합으로 개선하고, **Failure Case Analysis**로 개선 메커니즘을 입증.
+**팀원**: 길현빈 · 박건우 · 심상묵 · 황정민
 
 ---
 
-## 📊 현재 데이터 (2026-05-23 기준)
+## 🎯 연구 질문과 결론
 
-| 항목 | 값 |
-|---|:---:|
-| 총 article | 약 290건 (매일 +30-50건 누적 중) |
-| 시계열 범위 | 2026-05-19 ~ 진행 중 (5/19 이전 sparse) |
-| 매체 | Naver 60% / AITimes 18% / TheGuru 18% (구 GoogleNewsClient 삭제됨) |
-| 카테고리 | LLM / INFRA / AI Business / Telco (4종, v4 taxonomy 재설계됨) |
-| 임베딩 | OpenAI `text-embedding-3-small` (1536d) |
-| LLM 분석 | gpt-4o-mini (요약·인사이트·카테고리·태그) |
-| **QA Benchmark** | **27개** (Strict 7 / Trend 14 / Negative 6) — `data/human_qa_benchmark_v1.jsonl` |
+> **"왜 뉴스 검색 시스템은 사용자가 원하는 기사를 못 찾아오는가?"**
 
-목표 누적 (W6, 6/25): **약 1,500-2,000건**
+검색·재정렬·생성 3단계를 분리해 측정한 결과, **Reranker(MRR 0.43→0.81)와 생성(환각 거의 없음)은 충분했으나, 1차 검색의 상한(Recall@10 ≈ 0.54)이 전체 성능의 천장으로 작용**했다. 실패 사례 분석에서도 회피의 다수 원인이 검색 단계였다. 즉 **성능 개선의 핵심은 검색 품질**임을 데이터로 진단하였다.
+
+뉴스 검색의 3가지 구조적 실패를 가설로 잡았다: ① 의미 혼동, ② 오래된 기사, ③ 키워드 불일치. 이를 **Hybrid Retrieval → Cross-encoder Reranker → Temporal Weighting → LLM 생성**의 4단계 파이프라인으로 단계적으로 다루고 각 단계의 기여를 분리 측정한다.
 
 ---
 
-## 📁 폴더 구조
+## 1. 데이터셋
 
-```
-INSK-trend-forecast/
-├── README.md                     ← 이 파일
-├── .gitignore
-├── data/
-│   ├── human_qa_benchmark_v1.jsonl   ← ⭐ QA 평가셋 (Strict / Trend / Negative)
-│   ├── human_qa_benchmark_v1.txt     ← 사람 읽기용 양식
-│   ├── insk_corpus.parquet           ← (예정) INSK MySQL export
-│   ├── article_embeddings.parquet    ← (예정) OpenAI 1536d 임베딩
-│   └── article_analyses.parquet      ← (예정) summary·insight·category·tags
-├── docs/
-│   └── data_dictionary.md            ← 데이터 사전 + 알려진 한계
-├── notebooks/
-│   ├── 01_eda.ipynb                  ← (팀원 A 시작) EDA
-│   ├── 02_retrieval_baseline.ipynb   ← (팀원 A) BM25 / Embedding / Hybrid
-│   ├── 03_embedding_comparison.ipynb ← (팀원 A) OpenAI vs BGE-M3 vs ko-sroberta
-│   ├── 04_hard_negative_mining.ipynb ← (팀원 B) Hard negative mining
-│   ├── 05_reranker_finetune.ipynb    ← (팀원 B) Cross-encoder fine-tune
-│   ├── 06_temporal_weighting.ipynb   ← (팀원 C) α·β·γ tuning
-│   ├── 07_rag_generation.ipynb       ← (팀원 C) LLM 답변 생성
-│   ├── 08_ragas_eval.ipynb           ← (팀원 C) RAGAS 4지표
-│   └── 09_failure_analysis.ipynb     ← (팀원 C) 발표 핵심 슬라이드 자료
-├── src/
-│   ├── retrieval/                    ← retrieval 모듈
-│   ├── reranker/                     ← reranker 모듈
-│   ├── eval/                         ← 평가 유틸
-│   └── rag_agent/                    ← RAG 통합
-└── app/
-    └── streamlit_demo.py             ← 최종 데모 (PM 통합)
-```
+### 1.1 뉴스 코퍼스
+INSK가 Naver News API · AI Times RSS · The Guru RSS 3개 소스에서 수집하고, URL·제목 Jaccard로 중복 제거 후 LLM으로 분류·요약한 코퍼스를 사용한다. 총 616건, 분포는 AI Business 55% · INFRA 18% · LLM · Telco 각 13%.
+
+![수집 건수·분포](screenshot/01-corpus-stats.png)
+![카테고리별 키워드](screenshot/02-keywords-by-category.png)
+
+### 1.2 QA 평가셋 (정답 실재성 검증)
+정답지가 부실하면 검색 실패가 모델 탓인지 정답지 탓인지 구분할 수 없다. 따라서 질문 50개를 작성한 뒤 각 질문의 정답이 코퍼스에 실재하는지 검색으로 검증하여, 최종 **27개**(Strict 7 / Trend 14 / Negative 6)를 확정하였다. 코퍼스에 답이 없는 현실적 질문은 버리지 않고 **Negative QA**로 채택해 환각·회피 측정에 활용한다.
+
+![QA 3분류](screenshot/03-qa-distribution.png)
+![QA 3분류 기준](screenshot/04-qa-criteria.png)
+![QA 예시](screenshot/05-qa-examples.png)
 
 ---
 
-## ⚡ 빠른 시작 (팀원 A·B·C)
+## 2. 실험 결과
 
-### 1. 환경 셋업
+### 2.1 검색 모델 비교 (5종)
+BM25(키워드), OpenAI · BGE-M3 · ko-sroberta(의미 임베딩), 그리고 BM25+임베딩 융합 Hybrid를 Recall@5 · MRR · nDCG@5로 비교했다. **Hybrid가 전체 1위, 범용 유료 OpenAI 임베딩이 가장 낮았다.** 한국어 AI 뉴스 도메인에서는 도메인 특화 오픈소스 모델이 더 강했다.
+
+![5개 검색모델 성능 비교](screenshot/06-retrieval-5models.png)
+
+### 2.2 질문 유형별 강점 분석
+질문 특성에 따라 강한 모델이 달랐다. 키워드형은 Hybrid, 의미형은 BGE-M3, 한국어 회사명("삼성전자")은 ko-sroberta가 0.688로 최고(BM25는 0.06으로 사실상 실패), 영문 기술용어는 BGE-M3가 강했다. 이에 따라 이후 검색 베이스로 **Hybrid**를 채택했다.
+
+![쿼리 스타일별 최적 모델](screenshot/07-best-by-query-style.png)
+![언어 특성별 최적 모델](screenshot/08-best-by-language.png)
+
+### 2.3 Cross-encoder Reranker 파인튜닝
+성능 비교 중 Hard Negative(밀접 오답)를 기록해 질문-오답 쌍 486개를 확보하고, 질문-정답·질문-오답으로 재구성한 972개 샘플로 한국어 사전학습 모델 `klue/bert-base`를 Cross-encoder로 파인튜닝했다.
+
+![Hard Negative Mining](screenshot/09-hard-negative-mining.png)
+![Reranker 파인튜닝 코드](screenshot/10-reranker-finetune-code.png)
+
+재정렬 효과: **MRR 0.43 → 0.81**, **nDCG 0.344 → 0.601**. 1차 검색 상위 10개 Recall(0.536)이 Reranker가 상위 5개로 추린 뒤에도 동일하게 유지되어, top-10 안의 정답을 top-5로 정확히 끌어올렸음을 확인했다.
+
+![Reranker 최종 결과](screenshot/11-reranker-results.png)
+
+### 2.4 시간 가중치 + RAGAS 평가
+뉴스의 최신성을 반영하기 위해 시간 가중치 `exp(−λ·days_diff)`를 적용(최신 1, 오래될수록 0, 음수 방지 최소값 0 고정). 생성 품질은 RAGAS의 Faithfulness · 답변 유사도 · Context Precision으로 측정했다.
+
+![시간 가중치 연산 코드](screenshot/12-temporal-weighting-code.png)
+![RAGAS 평가 결과](screenshot/13-ragas-results.png)
+
+### 2.5 실패 사례 분석 (Failure Case Analysis)
+Faithfulness 0점 사례는 대부분 환각이 아니라 "관련 내용을 찾을 수 없다"는 **과도한 회피**였다. 원인이 검색인지 생성인지 구분하기 위해 Context Precision을 함께 확인했다. 총 11건 중 **검색 품질 저하 5건 · 생성 단계 실패 2건 · 복합 4건**으로, 답변 품질 향상에는 생성뿐 아니라 검색 개선이 함께 필요함을 확인했다.
+
+![검색 단계 실패 분석](screenshot/14-failure-retrieval.png)
+![생성 단계 실패 분석](screenshot/15-failure-generation.png)
+
+### 2.6 데모
+질문 → Hybrid 검색(후보 10개) → Reranker 재정렬 → 근거 인용 답변 생성의 전체 파이프라인을 Streamlit으로 시연했다.
+
+![Streamlit 데모 (검색·재정렬)](screenshot/16-demo-search-rerank.png)
+![Streamlit 데모 (최종 답변, 근거 인용)](screenshot/17-demo-final-answer.png)
+
+---
+
+## 3. 결론 및 향후 과제
+
+**결론.** Reranker와 생성은 충분했으나 1차 검색의 천장(Recall@10 ≈ 0.54)이 전체 성능을 제한했다. "왜 못 찾는가"의 답은 검색 성능이며, 향후 개선은 검색 단계에 집중되어야 함을 데이터로 진단했다.
+
+**향후 과제.** ① Reranker 후보 풀을 top-10 → top-50으로 확대, ② 기사 본문 확보 및 청크 단위 검색, ③ BGE-M3의 sparse·multi-vector 활용, ④ 질문 특성 기반 모델 라우팅.
+
+**한계.** 코퍼스 616건·QA 27개로는 절대 지표보다 모델 간 상대 비교에 의미가 있으며, 매체 편향(Naver 다수)과 짧은 시계열 구간이 시간 가중치 실험 범위를 제한했다.
+
+---
+
+## 4. 팀 역할
+
+| 역할 | 담당 | 산출물 |
+|---|---|---|
+| 박건우 (PM · Data) | INSK export, QA benchmark, 데이터 사전, 통합 데모 | `data/`, `app/`, `docs/data_dictionary.md` |
+| 팀원 A (Retrieval) | BM25 / 임베딩 3종 / Hybrid + 질문 특성 분석 | `notebooks/01-03` |
+| 팀원 B (Reranker) | Hard negative mining + Cross-encoder 파인튜닝 | `notebooks/04-05` |
+| 팀원 C (RAG · Eval) | Temporal weighting + RAGAS + Failure Analysis | `notebooks/06-09` |
+
+---
+
+## 5. 실행 방법
 
 ```bash
-# Python 3.10+ 권장
-python -m venv .venv
-.venv\Scripts\activate   # Windows
-# source .venv/bin/activate  # Mac/Linux
-
-# 핵심 라이브러리
-pip install pandas numpy scikit-learn matplotlib jupyter
+# 환경 (Python 3.10+)
+pip install pandas numpy scikit-learn jupyter
 pip install sentence-transformers faiss-cpu rank-bm25
-pip install openai ragas torch transformers
+pip install openai ragas torch transformers streamlit
+
+# 데이터 로드
+python -c "import pandas as pd; print(len(pd.read_parquet('data/insk_corpus.parquet')))"
+
+# 데모 실행 (OpenAI 키 필요)
+streamlit run app/streamlit_demo.py
 ```
 
-### 2. 데이터 로드
-
-```python
-import pandas as pd
-import json
-
-# QA benchmark (지금 사용 가능)
-with open("data/human_qa_benchmark_v1.jsonl", encoding="utf-8") as f:
-    qa = [json.loads(line) for line in f]
-
-print(f"Total: {len(qa)} questions")
-print(f"Strict: {sum(1 for q in qa if q['type']=='Strict')}")
-print(f"Trend:  {sum(1 for q in qa if q['type']=='Trend')}")
-print(f"Negative: {sum(1 for q in qa if q['type']=='Negative')}")
-```
-
-### 3. Article corpus 로드 (5/24 일요일 박건우 export 후)
-
-```python
-articles = pd.read_parquet("data/insk_corpus.parquet")
-embeddings = pd.read_parquet("data/article_embeddings.parquet")
-analyses = pd.read_parquet("data/article_analyses.parquet")
-```
+데이터 스키마·알려진 한계는 [docs/data_dictionary.md](docs/data_dictionary.md), 최종 결론 정리는 [docs/final_conclusion.md](docs/final_conclusion.md) 참조.
 
 ---
 
-## 👥 팀 역할 분담 (4인)
-
-| 역할 | 담당 | 핵심 산출물 |
-|---|---|---|
-| **박건우 (PM + Data)** | INSK export, QA benchmark, 통합 데모, 발표 | `data/`, `app/streamlit_demo.py`, 발표 슬라이드 |
-| **팀원 A (Retrieval)** | BM25 / Embedding 3종 / Hybrid RRF + query 특성별 분석 | `notebooks/01-03` |
-| **팀원 B (Reranker DL)** | Hard negative mining + Cross-encoder fine-tune + Improvement Ceiling 분석 | `notebooks/04-05`, `models/reranker_ft.pt` |
-| **팀원 C (RAG + Eval)** | Temporal weighting + RAGAS + **Failure Case Analysis (발표 핵심)** | `notebooks/06-09` |
-
----
-
-## 📐 평가 지표 (5가지)
-
-QA benchmark의 3가지 type에 따라:
-
-| 지표 | 적용 대상 | 의미 |
-|---|:---:|---|
-| **Recall@k** | Strict + Trend | Top-k 안에 gold article이 있나? |
-| **MRR / nDCG** | Strict + Trend | 순위 품질 |
-| **Faithfulness** | Strict + Trend (with ground_truth) | LLM 답변이 근거와 일치하나? |
-| **Hallucination rate** | Negative | 답 없는 질문에 거짓말 하나? |
-| **Abstention precision** | Negative | "모른다"고 답하는 능력 |
-
----
-
-## 🗓️ 일정 (W1 ~ W6)
-
-| 주차 | 핵심 마일스톤 |
-|:---:|---|
-| W1 (5/14-5/20) | ✅ 주제 확정, v4 인프라, QA benchmark v1 |
-| **W2 (5/21-5/27)** | 🔴 **5/24 첫 데이터 export, 팀원 A·B·C 발진** |
-| W3 (5/28-6/3) | Embedding 3종 비교, Reranker 학습, RAG baseline |
-| W4 (6/4-6/10) | Temporal weighting, RAGAS 측정, B급 QA 검토 |
-| W5 (6/11-6/17) | Failure Case Analysis, Ablation 표, 데모 |
-| W6 (6/18-6/25) | 최종 발표 + 리포트 |
-
----
-
-## ⚠️ 알려진 데이터 한계 (필수 인지)
-
-상세는 [docs/data_dictionary.md](docs/data_dictionary.md) 참조. 요약:
-
-1. **분류 편향**: gpt-4o-mini가 LLM 기사를 AI Business로 분류하는 경향 일부 남음 (v4 taxonomy 재설계로 완화 중)
-2. **시계열 lumpy**: 5/19 이전은 sparse, 5/19 이후 연속 분포. **Temporal weighting 실험은 5/19 이후 데이터로**
-3. **본문 truncate**: 6000자 이상 본문은 잘림 (임베딩은 정상)
-4. **매체 편향**: Naver 60% (search API 풍부) / AITimes·TheGuru 각 18%
-
----
-
-## 🎤 발표 narrative — Q&A 대응
-
-| 예상 질문 | 답변 narrative |
-|---|---|
-| "QA 27개가 적지 않냐?" | "초기 50개 seed에서 corpus 실재성 검증 거쳐 A급 27개만 채택. '좋은 27개' > '애매한 50개'." |
-| "왜 Strict/Trend/Negative 3분류?" | "현업 검색엔진(Google·Naver)도 query log와 benchmark를 분리. 평가는 엄격해야 retrieval 품질 비교 가능." |
-| "단순 RAG와 뭐가 다른가?" | "3분류 + ground truth 문장 + Negative QA로 **hallucination·abstention까지 분리 측정**." |
-
----
-
-## 🔗 참조
-
+## 6. 참조
 - INSK 본체 (백엔드): https://github.com/gm-15/INSK
 - 멘토 피드백 changelog: [INSK/MENTOR_FEEDBACK_CHANGELOG.md](https://github.com/gm-15/INSK/blob/main/MENTOR_FEEDBACK_CHANGELOG.md)
-- 평가 안내문: 상명대 시계열 데이터 수업 (2026-1)
-
----
-
-## 📞 운영
-
-- 매주 일요일 21시: 박건우가 `data/` 갱신 + 카톡 공지
-- 회의: 매주 일요일 22시 (zoom 또는 카톡)
-- GitHub Issue로 작업 이슈 관리
-- 코드 commit은 자유롭게 push (main branch 직접 OK, 본인 작업 branch도 OK)
