@@ -122,4 +122,3 @@ streamlit run app/streamlit_demo.py
 
 ## 6. 참조
 - INSK 본체 (백엔드): https://github.com/gm-15/INSK
-- 멘토 피드백 changelog: [INSK/MENTOR_FEEDBACK_CHANGELOG.md](https://github.com/gm-15/INSK/blob/main/MENTOR_FEEDBACK_CHANGELOG.md)
